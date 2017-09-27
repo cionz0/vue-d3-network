@@ -211,7 +211,7 @@
         if (!size || !size.h) this.size.h = this.$el.clientHeight
         this.padding.x = 0
         this.padding.y = 0
-        // serach offsets of parents
+        // search offsets of parents
         let vm = this
         while (vm.$parent) {
           this.padding.x += vm.$el.offsetLeft || 0
@@ -284,10 +284,6 @@
         if (forces.Link !== false) {
           sim.force('link', d3.forceLink(links).id(function (d) { return d.id }))
         }
-//      if (forces.Boundary !== false) {
-//        sim.force('boundary', d3.forceLink(links).id(function (d) { return d.id }))
-//        sim.force('boundary', d3.force)
-////      }
         sim = this.setCustomForces(sim);
 
         return sim
@@ -322,12 +318,6 @@
             n.x = n.cx
             n.y = n.cy
           });
-//          for (var i = 0; i < this.nodes.length; ++i) {
-//            var node = this.nodes[i];
-//            console.log(node);
-//            node.attr("cx", function (d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
-//              .attr("cy", function (d) { return d.y = Math.max(radius, Math.min(height - radius, d.y)); });
-//          }
 
         });
         this.simulation.restart()
