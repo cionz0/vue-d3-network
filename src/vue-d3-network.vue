@@ -1,6 +1,7 @@
 <script>
   import * as forceSimulation from 'd3-force'
-  const d3 = Object.assign({}, forceSimulation)
+  import * as bboxCollide from 'd3-bboxCollide'
+  const d3 = Object.assign({}, forceSimulation, bboxCollide)
   import svgRenderer from './components/svgRenderer.vue'
   import canvasRenderer from './components/canvasRenderer.vue'
   import saveImage from './lib/saveImage.js'
@@ -67,7 +68,8 @@
           X: 0.5,
           Y: 0.5,
           ManyBody: true,
-          Link: true
+          Link: true,
+          Collide: true
         },
         noNodes: false,
         strLinks: true,
@@ -240,6 +242,20 @@
           if (!node.y) vm.$set(node, 'y', 0)
           // node default name
           if (!node.name) vm.$set(node, 'name', 'node ' + node.id)
+          //  cionzo qua metti una div con dentro il nome e la appiccichi al nodo
+          function getTextWidth (text, font) {
+            // re-use canvas object for better performance
+            var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+            var context = canvas.getContext("2d");
+            context.font = font;
+            var metrics = context.measureText(text);
+            return {w: metrics.width, h: metrics.height};
+          }
+          let metrics = getTextWidth(node.name, this.fontSize)
+
+          node.labelWidth = metrics.w
+          node.labelHeight = this.fontSize
+
           if (node.svgSym) {
             node.svgIcon = svgExport.svgElFromString(node.svgSym)
             if (!this.canvas && node.svgIcon && !node.svgObj) node.svgObj = svgExport.toObject(node.svgIcon)
@@ -284,6 +300,19 @@
         if (forces.Link !== false) {
           sim.force('link', d3.forceLink(links).id(function (d) { return d.id }))
         }
+        if (forces.Collide !== false) {
+          var collide = d3.bboxCollide(function (d,i) {
+            console.log(d.value)
+            return [[-0.5 * d.nodeSize , -0.5 * d.labelHeight],[0.5 * d.nodeSize + d.labelWidth, 0.5 * d.labelHeight]]
+          })
+            .strength(this.force)
+//            .iterations(2)
+          sim.force('collide', collide)
+        }
+
+
+
+
         sim = this.setCustomForces(sim);
 
         return sim
@@ -313,8 +342,9 @@
         var that = this
         this.simulation.on('tick', function () {
           that.nodes.forEach(function (n) {
-            n.cx = Math.max(that.nodeSize, Math.min(that.size.w - that.nodeSize, n.x));
-            n.cy = Math.max(that.nodeSize, Math.min(that.size.h - that.nodeSize, n.y));
+
+            n.cx = Math.max(that.nodeSize, Math.min(that.size.w - that.nodeSize - n.labelWidth - 1, n.x));
+            n.cy = Math.max(that.nodeSize, Math.min(that.size.h - that.nodeSize - 0.5 * n.labelHeight - 1, n.y));
             n.x = n.cx
             n.y = n.cy
           });
@@ -444,5 +474,10 @@
 
     .node-label
         fill: $dark
+        height: auto
+        width: auto
+        white-space: nowrap
+
+
 </style>
 
