@@ -284,7 +284,19 @@ export default {
       if (forces.Link !== false) {
         sim.force('link', d3.forceLink(links).id(function (d) { return d.id }))
       }
-      sim = this.setCustomForces(sim)
+      sim = this.setCustomForces(sim);
+
+      function tick () {
+        nodes.attr('cx', function (d) { return d.x = Math.max(this.nodeSize, Math.min(this.size.w - this.nodeSize, d.x)); })
+             .attr('cy', function (d) { return d.y = Math.max(this.nodeSize, Math.min(this.size.h - this.nodeSize, d.y)); });
+
+        links.attr('x1', function (d) { return d.source.x; })
+             .attr('y1', function (d) { return d.source.y; })
+             .attr('x2', function (d) { return d.target.x; })
+             .attr('y2', function (d) { return d.target.y; });
+        console.log('tick')
+      }
+      tick()
       return sim
     },
     setCustomForces (sim) {
