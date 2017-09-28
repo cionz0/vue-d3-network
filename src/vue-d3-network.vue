@@ -1,6 +1,7 @@
 <script>
   import * as forceSimulation from 'd3-force'
   import * as bboxCollide from 'd3-bboxCollide'
+
   const d3 = Object.assign({}, forceSimulation, bboxCollide)
   import svgRenderer from './components/svgRenderer.vue'
   import canvasRenderer from './components/canvasRenderer.vue'
@@ -242,15 +243,17 @@
           if (!node.y) vm.$set(node, 'y', 0)
           // node default name
           if (!node.name) vm.$set(node, 'name', 'node ' + node.id)
+
           //  cionzo qua metti una div con dentro il nome e la appiccichi al nodo
           function getTextWidth (text, font) {
             // re-use canvas object for better performance
-            var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-            var context = canvas.getContext("2d");
-            context.font = font;
-            var metrics = context.measureText(text);
-            return {w: metrics.width, h: metrics.height};
+            var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'))
+            var context = canvas.getContext('2d')
+            context.font = font
+            var metrics = context.measureText(text)
+            return {w: metrics.width, h: metrics.height}
           }
+
           let metrics = getTextWidth(node.name, this.fontSize)
 
           node.labelWidth = metrics.w
@@ -282,10 +285,12 @@
       simulate (nodes, links) {
         let forces = this.forces
         let sim = d3.forceSimulation()
-          .stop()
-          .alpha(0.5)
-          // .alphaMin(0.05)
-          .nodes(nodes)
+           .stop()
+           .alpha(0.5)
+           // .alphaMin(0.05)
+           .nodes(nodes)
+        let radius = this.nodeSize
+        let padding = 3;
 
         if (forces.Center !== false) sim.force('center', d3.forceCenter(this.center.x, this.center.y))
         if (forces.X !== false) {
@@ -301,19 +306,18 @@
           sim.force('link', d3.forceLink(links).id(function (d) { return d.id }))
         }
         if (forces.Collide !== false) {
-          var collide = d3.bboxCollide(function (d,i) {
-            console.log(d.value)
-            return [[-0.5 * d.nodeSize , -0.5 * d.labelHeight],[0.5 * d.nodeSize + d.labelWidth, 0.5 * d.labelHeight]]
+          var collide = d3.bboxCollide(function (d, i) {
+            console.log(d, radius)
+            console.log(d.name, [[-0.5 * radius , -0.5 * d.labelHeight],[0.5 * radius + d.labelWidth, 0.5 * d.labelHeight]])
+            return [[-0.5 * radius -padding , -padding -0.5 * d.labelHeight], [padding + 0.5 * radius + d.labelWidth,padding +  0.5 * d.labelHeight]]
           })
-            .strength(this.force)
-//            .iterations(2)
+             .strength(1)
+             .iterations(2)
+          console.log('collide', collide)
           sim.force('collide', collide)
         }
 
-
-
-
-        sim = this.setCustomForces(sim);
+        sim = this.setCustomForces(sim)
 
         return sim
       },
@@ -343,13 +347,13 @@
         this.simulation.on('tick', function () {
           that.nodes.forEach(function (n) {
 
-            n.cx = Math.max(that.nodeSize, Math.min(that.size.w - that.nodeSize - n.labelWidth - 1, n.x));
-            n.cy = Math.max(that.nodeSize, Math.min(that.size.h - that.nodeSize - 0.5 * n.labelHeight - 1, n.y));
+            n.cx = Math.max(that.nodeSize, Math.min(that.size.w - that.nodeSize - n.labelWidth - 1, n.x))
+            n.cy = Math.max(that.nodeSize, Math.min(that.size.h - that.nodeSize - 0.5 * n.labelHeight - 1, n.y))
             n.x = n.cx
             n.y = n.cy
-          });
+          })
 
-        });
+        })
         this.simulation.restart()
       },
       reset () {
@@ -437,47 +441,45 @@
 </script>
 
 <style lang="stylus">
-    @import 'vars.styl'
-    .net
-        height: 100%
-        margin: 0
+  @import 'vars.styl'
+  .net
+    height: 100%
+    margin: 0
 
-    .net-svg
-    // fill: white // background color to export as image
-    .node
-        stroke: alpha($dark, 0.7)
-        stroke-width: 3px
-        transition: fill 0.5s ease
-        fill: $white
+  .net-svg
+  // fill: white // background color to export as image
+  .node
+    stroke: alpha($dark, 0.7)
+    stroke-width: 3px
+    transition: fill 0.5s ease
+    fill: $white
 
-    .node.selected
-        stroke: $color2
+  .node.selected
+    stroke: $color2
 
-    .node.pinned
-        stroke: alpha($warn, .6)
+  .node.pinned
+    stroke: alpha($warn, .6)
 
-    .link
-        stroke: alpha($dark, 0.3)
+  .link
+    stroke: alpha($dark, 0.3)
 
-    .node
-    .link
-        stroke-linecap: round
-        &:hover
-            stroke: $warn
-            stroke-width: 5px
+  .node
+  .link
+    stroke-linecap: round
+    &:hover
+      stroke: $warn
+      stroke-width: 5px
 
-    .link.selected
-        stroke: alpha($color2, 0.6)
+  .link.selected
+    stroke: alpha($color2, 0.6)
 
-    .curve
-        fill: none
+  .curve
+    fill: none
 
-    .node-label
-        fill: $dark
-        height: auto
-        width: auto
-        white-space: nowrap
-
-
+  .node-label
+    fill: $dark
+    height: auto
+    width: auto
+    white-space: nowrap
 </style>
 
