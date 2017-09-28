@@ -44,6 +44,15 @@
             links: {}
           }
         }
+      },
+      collisionForce: {
+        type: Object,
+        default: () => {
+          return {
+            strength: 0,
+            iterations: 0
+          }
+        }
       }
     },
     data () {
@@ -311,8 +320,8 @@
             console.log(d.name, [[-0.5 * radius , -0.5 * d.labelHeight],[0.5 * radius + d.labelWidth, 0.5 * d.labelHeight]])
             return [[-0.5 * radius -padding , -padding -0.5 * d.labelHeight], [padding + 0.5 * radius + d.labelWidth,padding +  0.5 * d.labelHeight]]
           })
-             .strength(1)
-             .iterations(2)
+             .strength(this.collisionForce.strength)
+             .iterations(this.collisionForce.iterations)
           console.log('collide', collide)
           sim.force('collide', collide)
         }
