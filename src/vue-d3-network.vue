@@ -211,29 +211,43 @@
     },
     methods: {
       initPanAndZoom () {
-        this.panAndZoom.svg = d3wrapper.select('svg')
-        let llinks = d3wrapper.select('#l-links').remove()
-        let lnodes = d3wrapper.select('#l-nodes').remove()
-        this.panAndZoom.svgGroup = this.panAndZoom.svg.append('g')
 
-        this.panAndZoom.svgGroup.append(function () { return llinks.node(); })
-        this.panAndZoom.svgGroup.append(function () { return lnodes.node(); })
+
+        this.panAndZoom.svg = d3wrapper.select('svg')
+
+        let removed = []
+        let children = []
+        this.panAndZoom.svg.node().childNodes.forEach(function (d) {
+          children.push(d)
+
+           }
+        )
+        children.forEach(function (d) {
+          removed.push(d3wrapper.select(d).remove())
+        })
+
+        this.panAndZoom.svgGroup = this.panAndZoom.svg.append('g')
+        let _this = this
+        removed.forEach(function (d) {
+          _this.panAndZoom.svgGroup.append(function () { return d.node() })
+        })
+
 
         let zoom = d3wrapper.zoom()
            .scaleExtent([1,100])
            .on('zoom', this.zoomFn);
 
-        this.panAndZoom.svgGroup.call(zoom);
+        this.panAndZoom.svg.call(zoom);
 
       },
 
-      zoomFn() {
+      zoomFn () {
         this.panAndZoom.svgGroup
            .attr('transform', 'translate(' +
               d3wrapper.event.transform.x + ',' +
               d3wrapper.event.transform.y +
               ') scale(' +
-              d3wrapper.event.transform.k + ')');
+              d3wrapper.event.transform.k + ')')
       },
 
       updateNodeSvg () {
