@@ -212,13 +212,12 @@
     methods: {
       initPanAndZoom () {
 
-
         this.panAndZoom.svg = d3wrapper.select('svg')
 
         let removed = []
         let children = []
         this.panAndZoom.svg.node().childNodes.forEach(function (d) {
-          children.push(d)
+             children.push(d)
 
            }
         )
@@ -232,22 +231,24 @@
           _this.panAndZoom.svgGroup.append(function () { return d.node() })
         })
 
-
         let zoom = d3wrapper.zoom()
-           .scaleExtent([1,100])
-           .on('zoom', this.zoomFn);
+           .scaleExtent([1, 100])
+           .on('zoom', this.zoomFn)
 
-        this.panAndZoom.svg.call(zoom);
+        this.panAndZoom.svg.call(zoom)
 
       },
 
       zoomFn () {
-        this.panAndZoom.svgGroup
-           .attr('transform', 'translate(' +
-              d3wrapper.event.transform.x + ',' +
-              d3wrapper.event.transform.y +
-              ') scale(' +
-              d3wrapper.event.transform.k + ')')
+        console.log(this.selected, this.dragging)
+        if (this.dragging === false) {
+          this.panAndZoom.svgGroup
+             .attr('transform', 'translate(' +
+                d3wrapper.event.transform.x + ',' +
+                d3wrapper.event.transform.y +
+                ') scale(' +
+                d3wrapper.event.transform.k + ')')
+        }
       },
 
       updateNodeSvg () {
@@ -459,6 +460,9 @@
       // -- Render helpers
       nodeClick (event, node) {
         this.$emit('node-click', event, node)
+        if (this.dragging !== false)
+          this.dragging = false
+//        console.log(this.dragging, this.selected)
       },
       linkClick (event, link) {
         this.$emit('link-click', event, link)
