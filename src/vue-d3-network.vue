@@ -1,6 +1,7 @@
 <script>
   import * as forceSimulation from 'd3-force'
   import * as bboxCollide from 'd3-bboxCollide'
+  import * as d3wrapper from 'd3'
 
   const d3 = Object.assign({}, forceSimulation, bboxCollide)
   import svgRenderer from './components/svgRenderer.vue'
@@ -12,7 +13,8 @@
     name: 'd3-network',
     components: {
       canvasRenderer,
-      svgRenderer
+      svgRenderer,
+      d3wrapper
     },
     props: {
       netNodes: {
@@ -98,7 +100,11 @@
         },
         simulation: null,
         nodeSvg: null,
-        resizeListener: true
+        resizeListener: true.valueOf(),
+        panAndZoom: {
+          svg: null,
+          svgGroup: null
+        }
       }
     },
     render (createElement) {
@@ -154,6 +160,9 @@
         this.animate()
       })
       if (this.resizeListener) window.addEventListener('resize', this.onResize)
+
+      this.initPanAndZoom()
+
     },
     beforeDestroy () {
       if (this.resizeListener) window.removeEventListener('resize', this.onResize)
@@ -201,12 +210,39 @@
       }
     },
     methods: {
+      initPanAndZoom () {
+        this.panAndZoom.svg = d3wrapper.select('svg')
+        let llinks = d3wrapper.select('#l-links').remove()
+        let lnodes = d3wrapper.select('#l-nodes').remove()
+        this.panAndZoom.svgGroup = this.panAndZoom.svg.append('g')
+
+        this.panAndZoom.svgGroup.append(function () { return llinks.node(); })
+        this.panAndZoom.svgGroup.append(function () { return lnodes.node(); })
+
+        let zoom = d3wrapper.zoom()
+           .scaleExtent([1,100])
+           .on('zoom', this.zoomFn);
+
+        this.panAndZoom.svgGroup.call(zoom);
+
+      },
+
+      zoomFn() {
+        this.panAndZoom.svgGroup
+           .attr('transform', 'translate(' +
+              d3wrapper.event.transform.x + ',' +
+              d3wrapper.event.transform.y +
+              ') scale(' +
+              d3wrapper.event.transform.k + ')');
+      },
+
       updateNodeSvg () {
         let svg = null
         if (this.nodeSym) {
           svg = svgExport.svgElFromString(this.nodeSym)
         }
         this.nodeSvg = svg
+
       },
       methodCall (action, args) {
         let method = this[action]
@@ -253,7 +289,6 @@
           // node default name
           if (!node.name) vm.$set(node, 'name', 'node ' + node.id)
 
-          //  cionzo qua metti una div con dentro il nome e la appiccichi al nodo
           function getTextWidth (text, font) {
             // re-use canvas object for better performance
             var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'))
@@ -299,7 +334,7 @@
            // .alphaMin(0.05)
            .nodes(nodes)
         let radius = this.nodeSize
-        let padding = 3;
+        let padding = 3
 
         if (forces.Center !== false) sim.force('center', d3.forceCenter(this.center.x, this.center.y))
         if (forces.X !== false) {
@@ -316,13 +351,11 @@
         }
         if (forces.Collide !== false) {
           var collide = d3.bboxCollide(function (d, i) {
-            console.log(d, radius)
-            console.log(d.name, [[-0.5 * radius , -0.5 * d.labelHeight],[0.5 * radius + d.labelWidth, 0.5 * d.labelHeight]])
-            return [[-0.5 * radius -padding , -padding -0.5 * d.labelHeight], [padding + 0.5 * radius + d.labelWidth,padding +  0.5 * d.labelHeight]]
+
+            return [[-0.5 * radius - padding, -padding - 0.5 * d.labelHeight], [padding + 0.5 * radius + d.labelWidth, padding + 0.5 * d.labelHeight]]
           })
              .strength(this.collisionForce.strength)
              .iterations(this.collisionForce.iterations)
-          console.log('collide', collide)
           sim.force('collide', collide)
         }
 
@@ -364,11 +397,13 @@
 
         })
         this.simulation.restart()
+
       },
       reset () {
         this.animate()
         this.nodes = this.simulation.nodes()
         if (this.forces.links) this.links = this.simulation.force('link').links()
+
       },
       // -- Mouse Interaction
       move (event) {
